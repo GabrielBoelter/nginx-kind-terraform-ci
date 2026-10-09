@@ -1,0 +1,14 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+
+# kubeconfig gerado pelo kind/Terraform
+*-config
+kubeconfig*
+
+# Diversos
+.DS_Store

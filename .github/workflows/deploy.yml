@@ -1,0 +1,113 @@
+name: Deploy no Kind via Terraform
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+env:
+  CLUSTER_NAME: aula-11
+  IMAGE_NAME: nginx-aula-11:1.0.0
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  deploy:
+    name: Provisionar cluster e publicar aplicação
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Instalar kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: "v1.31.0"
+
+      - name: Instalar kind CLI
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.24.0/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+          kind version
+
+      # -----------------------------------------------------------------
+      # 1) Provisiona o cluster kind EXCLUSIVAMENTE via Terraform
+      # -----------------------------------------------------------------
+      - name: Terraform init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform apply (cria o cluster kind)
+        working-directory: terraform
+        run: terraform apply -auto-approve
+
+      - name: Exportar KUBECONFIG do output do Terraform
+        working-directory: terraform
+        run: |
+          echo "KUBECONFIG=$(terraform output -raw kubeconfig_path)" >> "$GITHUB_ENV"
+
+      - name: Validar cluster (nodes)
+        run: |
+          kubectl cluster-info
+          kubectl get nodes -o wide
+
+      # -----------------------------------------------------------------
+      # 2) Build da imagem Docker da aplicação (nginx + HTML da aula)
+      # -----------------------------------------------------------------
+      - name: Build da imagem Docker
+        run: docker build -t "${IMAGE_NAME}" ./app
+
+      - name: Carregar imagem dentro do cluster kind
+        run: kind load docker-image "${IMAGE_NAME}" --name "${CLUSTER_NAME}"
+
+      # -----------------------------------------------------------------
+      # 3) Deploy dos manifestos Kubernetes (Deployment + Service)
+      # -----------------------------------------------------------------
+      - name: Aplicar manifestos Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Aguardar rollout do Deployment
+        run: kubectl rollout status deployment/nginx-aula-11 --timeout=120s
+
+      # -----------------------------------------------------------------
+      # 4) Evidências de que a aplicação está no ar
+      # -----------------------------------------------------------------
+      - name: Evidências - pods, service e nodes
+        run: |
+          echo "## Nodes" && kubectl get nodes -o wide
+          echo "## Pods"  && kubectl get pods -o wide
+          echo "## Service" && kubectl get svc nginx-aula-11
+
+      - name: Smoke test HTTP (http://localhost:81)
+        run: |
+          curl -fsS --retry 10 --retry-delay 3 --retry-connrefused http://localhost:81 \
+            | tee response.html
+          grep -q "Nginx rodando no Kubernetes com kind" response.html
+
+      - name: Publicar response.html como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-response
+          path: response.html
+
+      # -----------------------------------------------------------------
+      # 5) Limpeza: destrói o cluster via Terraform (sempre executa)
+      # -----------------------------------------------------------------
+      - name: Terraform destroy (sempre, mesmo se algo falhar)
+        if: always()
+        working-directory: terraform
+        run: terraform destroy -auto-approve

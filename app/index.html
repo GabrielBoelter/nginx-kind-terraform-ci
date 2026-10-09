@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aula 11 - DevOps</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: #e6edf3;
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1f2a44 100%);
+    }
+
+    main {
+      width: 100%;
+      max-width: 760px;
+      padding: 48px 40px;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      background: rgba(22, 27, 34, 0.85);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #58a6ff;
+      background: rgba(56, 139, 253, 0.15);
+    }
+
+    h1 {
+      margin: 16px 0 8px;
+      font-size: 2.4rem;
+      line-height: 1.2;
+    }
+
+    p.lead {
+      margin-bottom: 32px;
+      font-size: 1.1rem;
+      color: #9da7b3;
+    }
+
+    ul {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      list-style: none;
+    }
+
+    li {
+      padding: 20px;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      background: #0d1117;
+    }
+
+    li strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #58a6ff;
+    }
+
+    li span {
+      font-size: 0.92rem;
+      color: #9da7b3;
+    }
+
+    footer {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid #30363d;
+      font-size: 0.9rem;
+      color: #9da7b3;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: Consolas, "Courier New", monospace;
+      color: #7ee787;
+      background: #0d1117;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="tag">SATC &middot; DevOps &middot; Aula 11</span>
+    <h1>Nginx rodando no Kubernetes com kind</h1>
+    <p class="lead">
+      Esta página foi empacotada em uma imagem Docker e publicada em um cluster
+      Kubernetes local, criado com Terraform.
+    </p>
+
+    <ul>
+      <li>
+        <strong>Terraform</strong>
+        <span>Provisiona o cluster kind como infraestrutura como código.</span>
+      </li>
+      <li>
+        <strong>Docker</strong>
+        <span>Empacota o nginx com este HTML em uma imagem.</span>
+      </li>
+      <li>
+        <strong>Kubernetes</strong>
+        <span>Deployment e Service publicam a aplicação no cluster.</span>
+      </li>
+    </ul>
+
+    <footer>
+      Aplicação exposta em <code>http://localhost:81</code>
+    </footer>
+  </main>
+</body>
+</html>
